@@ -1,0 +1,6 @@
+{
+  "name": "Calculadora de Alçada para Alvará Judicial",
+  "description": "Calculadora do limite legal de 500 ORTNs atualizado pelo IPCA-E para levantamento bancário simplificado por alvará judicial.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
