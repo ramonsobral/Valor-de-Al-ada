@@ -658,6 +658,88 @@ export default function App() {
     doc.text(splitAlert, margin + 5, y + 6);
     y += 26;
 
+    // Grau de Comprometimento do Teto (Replicado no PDF)
+    const percent = (result.valorCausa / result.limiteAlcadaReais) * 100;
+    const formattedPercent = percent.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const isExceeded = percent > 100;
+
+    let barColorRGB = [16, 185, 129]; // Emerald 500
+    let textRGB = [4, 120, 87]; // Emerald 700
+    let statusText = "Margem Confortável";
+
+    if (percent > 100) {
+      barColorRGB = [239, 68, 68]; // Rose 500
+      textRGB = [185, 28, 28]; // Rose 700
+      statusText = "Excede o Teto Legal";
+    } else if (percent > 85) {
+      barColorRGB = [245, 158, 11]; // Amber 500
+      textRGB = [180, 83, 9]; // Amber 700
+      statusText = "Próximo ao Teto Legal";
+    } else if (percent > 60) {
+      barColorRGB = [59, 130, 246]; // Blue 500
+      textRGB = [29, 78, 216]; // Blue 700
+      statusText = "Utilização Moderada";
+    }
+
+    const boxHeight = 28;
+    if (y + boxHeight > 275) {
+      doc.addPage();
+      y = 16;
+    }
+
+    // Outer card background & border
+    doc.setFillColor(248, 250, 252); // slate-50
+    doc.setDrawColor(226, 232, 240); // slate-200
+    doc.rect(margin, y, 210 - 2 * margin, boxHeight, "F");
+    doc.rect(margin, y, 210 - 2 * margin, boxHeight, "S");
+
+    // Title / Header in Card
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(71, 85, 105); // slate-600
+    doc.text("GRAU DE COMPROMETIMENTO DO TETO", margin + 5, y + 6);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(115, 115, 115);
+    doc.text(`(${statusText})`, margin + 64, y + 6);
+
+    // Badge / Percent label on right
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(textRGB[0], textRGB[1], textRGB[2]);
+    doc.text(`${formattedPercent}% do teto legal`, 210 - margin - 5, y + 6, { align: "right" });
+
+    // Progress Bar Track
+    const barWidthMax = 210 - 2 * margin - 10;
+    const barY = y + 10;
+    doc.setFillColor(226, 232, 240); // slate-200
+    doc.rect(margin + 5, barY, barWidthMax, 2.5, "F");
+
+    // Progress Bar Fill
+    const fillWidth = (Math.min(100, percent) / 100) * barWidthMax;
+    if (fillWidth > 0) {
+      doc.setFillColor(barColorRGB[0], barColorRGB[1], barColorRGB[2]);
+      doc.rect(margin + 5, barY, fillWidth, 2.5, "F");
+    }
+
+    // Helper text description below progress bar
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(100, 116, 139); // slate-500
+    
+    let infoText = "";
+    if (isExceeded) {
+      infoText = `O valor da causa é superior ao limite permitido de 500 ORTNs para este procedimento simplificado de alvará.`;
+    } else {
+      const restValue = (result.limiteAlcadaReais - result.valorCausa).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      infoText = `O valor da causa consome ${formattedPercent}% do teto previsto em lei. Restam ${restValue} de margem segura.`;
+    }
+    const splitInfo = doc.splitTextToSize(infoText, 210 - 2 * margin - 10);
+    doc.text(splitInfo, margin + 5, y + 18);
+
+    y += boxHeight + 8;
+
     // Step by step breakdown section
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
@@ -769,6 +851,7 @@ export default function App() {
 
   const handleClear = () => {
     setDate("");
+    setDisplayDate("");
     setCauseValue("");
     setResult(null);
     setError(null);
@@ -784,7 +867,15 @@ export default function App() {
         <div className="max-w-6xl w-full mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4" id="header_inner_container">
           <div className="flex flex-col">
             <h1 className="text-xl md:text-2xl font-bold tracking-tight font-display flex items-center gap-2">
-              <Landmark className="w-6 h-6 text-blue-400 shrink-0" id="logo_icon" />
+              <a 
+                href="https://aistudio.google.com/app/apps/02e4f5b5-97c1-41b3-8996-39fa75035d48" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="hover:opacity-85 transition inline-flex items-center"
+                title="Acessar projeto no AI Studio"
+              >
+                <Landmark className="w-6 h-6 text-blue-400 shrink-0" id="logo_icon" />
+              </a>
               Valor de Alçada para Alvará Judicial
             </h1>
             <p className="text-slate-300 text-xs md:text-sm mt-1 max-w-xl">
@@ -1215,6 +1306,65 @@ export default function App() {
                           </span>
                         </div>
                       </div>
+
+                      {/* Percentual em relação ao teto */}
+                      {(() => {
+                        const percent = (result.valorCausa / result.limiteAlcadaReais) * 100;
+                        const isExceeded = percent > 100;
+                        const formattedPercent = percent.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+                        
+                        let barColor = "bg-emerald-500";
+                        let badgeBg = "bg-emerald-50 text-emerald-700 border-emerald-200";
+                        let statusText = "Margem Confortável";
+                        
+                        if (percent > 100) {
+                          barColor = "bg-rose-500";
+                          badgeBg = "bg-rose-50 text-rose-700 border-rose-200";
+                          statusText = "Excede o Teto Legal";
+                        } else if (percent > 85) {
+                          barColor = "bg-amber-500";
+                          badgeBg = "bg-amber-50 text-amber-700 border-amber-200";
+                          statusText = "Próximo ao Teto Legal";
+                        } else if (percent > 60) {
+                          barColor = "bg-blue-500";
+                          badgeBg = "bg-blue-50 text-blue-700 border-blue-200";
+                          statusText = "Utilização Moderada";
+                        }
+
+                        const widthPercent = Math.min(100, percent);
+
+                        return (
+                          <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg flex flex-col gap-3" id="legal_ceiling_metrics">
+                            <div className="flex flex-wrap items-center justify-between gap-2" id="legal_ceiling_label_row">
+                              <div className="flex items-center gap-1.5" id="legal_ceiling_title_col">
+                                <span className="text-xs font-bold text-slate-700">GRAU DE COMPROMETIMENTO DO TETO</span>
+                                <span className="text-[10px] text-slate-400 font-medium">({statusText})</span>
+                              </div>
+                              <span className={`text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full border ${badgeBg} flex items-center gap-1`} id="ceiling_badge_val">
+                                {formattedPercent}% do teto legal
+                              </span>
+                            </div>
+
+                            <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden relative" id="bar_track">
+                              <motion.div 
+                                className={`h-full ${barColor}`}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${widthPercent}%` }}
+                                transition={{ duration: 0.8, ease: "easeOut" }}
+                                id="bar_fill"
+                              />
+                            </div>
+
+                            <p className="text-[11px] text-slate-500 leading-snug" id="ceiling_helper_text">
+                              {isExceeded ? (
+                                <span>O valor da causa é <strong className="text-rose-700">superior</strong> ao limite permitido de 500 ORTNs para este procedimento simplificado de alvará.</span>
+                              ) : (
+                                <span>O valor da causa consome <strong className="text-slate-700">{formattedPercent}%</strong> do teto previsto em lei. Restam <strong className="text-emerald-700">{(result.limiteAlcadaReais - result.valorCausa).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong> de margem segura.</span>
+                              )}
+                            </p>
+                          </div>
+                        );
+                      })()}
 
                       {/* Technical Detail rows list */}
                       <div className="space-y-3 text-xs border-t border-slate-150 pt-6" id="metric_rows_list">
