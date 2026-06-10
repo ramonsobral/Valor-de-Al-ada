@@ -879,7 +879,24 @@ export default function App() {
               Valor de Alçada para Alvará Judicial
             </h1>
             <p className="text-slate-300 text-xs md:text-sm mt-1 max-w-xl">
-              Conforme Lei Federal nº 6.858/1980 e Tema Repetitivo 395 do STJ
+              Conforme{" "}
+              <a 
+                href="https://www.planalto.gov.br/ccivil_03/leis/l6858.htm" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-slate-300 hover:text-slate-100 transition inline-block decoration-transparent border-0"
+              >
+                Lei Federal nº 6.858/1980
+              </a>{" "}
+              e{" "}
+              <a 
+                href="https://processo.stj.jus.br/repetitivos/temas_repetitivos/pesquisa.jsp?novaConsulta=true&tipo_pesquisa=T&cod_tema_inicial=395&cod_tema_final=395" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-slate-300 hover:text-slate-100 transition inline-block decoration-transparent border-0"
+              >
+                Tema Repetitivo 395 do STJ
+              </a>
             </p>
           </div>
           <div className="bg-slate-700 px-4 py-2.5 rounded-lg border border-slate-600 shrink-0 self-stretch sm:self-auto text-center sm:text-left shadow-inner" id="reference_badge">
@@ -1381,9 +1398,9 @@ export default function App() {
                           <span className="font-sans font-bold text-slate-800">R$ {result.ortnUnitarioReais.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}</span>
                         </div>
                         <div className="flex justify-between py-1" id="row_difference">
-                          <span className="text-slate-500 font-medium">Margem / Diferença Financeira:</span>
+                          <span className="text-slate-500 font-medium">Diferença Encontrada:</span>
                           <span className={`font-sans font-bold text-xs ${result.comparacao === "MENOR" ? "text-emerald-700" : "text-rose-700"}`}>
-                            {Math.abs(result.limiteAlcadaReais - result.valorCausa).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} {result.comparacao === "MENOR" ? "(Sobra)" : "(Excesso)"}
+                            {Math.abs(result.limiteAlcadaReais - result.valorCausa).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} {result.comparacao === "MENOR" ? "(Margem)" : "(Excesso)"}
                           </span>
                         </div>
                       </div>
